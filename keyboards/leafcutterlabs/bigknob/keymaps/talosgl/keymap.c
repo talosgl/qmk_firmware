@@ -126,5 +126,30 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                      TD(TD_HUE_CHANGE),  // F13 on single tap, hue up on double-tap
                      TD(TD_BRIGHT_UP),   // F14 on single tap, brightness up on double tap
                      TD(TD_BRIGHT_DOWN), // F15 on single tap, brightness down on double tap
-                     TD(TD_RGB))         // F17 on single tap, RGB toggle on double, cycle animation mode on triple, go directly to rainbow swirl animation on quad-tap
+                     TD(TD_RGB))         // F16 on single tap, RGB toggle on double, cycle animation mode on triple, go directly to rainbow swirl animation on quad-tap
 };
+
+/* If I want to swap to using this instead of AHK for the Alt-code keys, basic idea would be:
+enum custom_keycodes {
+    ALT_CHECKMARK = SAFE_RANGE,
+    ALT_GUILLEMET_L,
+    ALT_GUILLEMET_R,
+    ALT_EM_DASH
+};
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case ALT_CHECKMARK:
+            if (record->event.pressed) {
+                register_code(KC_LALT);
+                tap_code(KC_KP_2);
+                tap_code(KC_KP_5);
+                tap_code(KC_KP_1);
+                unregister_code(KC_LALT);
+            }
+            return false;
+        // ... etc for other symbols
+    }
+    return true;
+}
+*/
