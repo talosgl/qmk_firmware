@@ -45,16 +45,17 @@ void dance_encoder_finished(tap_dance_state_t *state, void *user_data) {
     if (state->pressed) {
         // Button is being held
         encoder_button_held = true;
-    } else if (state->count == 1) {
-        // Single tap - send F24
-        tap_code(KC_F24);
     }
-    // We could add double-tap functionality here if we want
 }
 
 void dance_encoder_reset(tap_dance_state_t *state, void *user_data) {
     // Button released
     encoder_button_held = false;
+
+    // If it was a single tap (not a hold), send F24
+    if (state->count == 1 && !state->interrupted) {
+        tap_code(KC_F24);
+    }
 }
 
 bool encoder_update_user(uint8_t index, bool clockwise) {
