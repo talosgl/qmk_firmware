@@ -106,7 +106,7 @@ void dance_bright_down_finished(tap_dance_state_t *state, void *user_data) {
 
 void dance_rgb_finished(tap_dance_state_t *state, void *user_data) {
     if (state->count == 1) {
-        tap_code(KC_F17);
+        tap_code(KC_F16);
     } else if (state->count == 2) {
         rgblight_toggle();
     } else if (state->count == 3) {
