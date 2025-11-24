@@ -62,9 +62,9 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         if (encoder_button_held) {
             // While holding encoder button: change hue (It also changes volume no matter what)
             if (clockwise) {
-                rgblight_increase_hue();
+                rgblight_increase_val();
             } else {
-                rgblight_decrease_hue();
+                rgblight_decrease_val();
             }
         } else {
             // Normal: volume control
@@ -122,7 +122,7 @@ tap_dance_action_t tap_dance_actions[] = {[TD_ENCODER_BTN] = ACTION_TAP_DANCE_FN
 // -------- actually set the keymap
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // button closest to USB is first
-    [_MAIN] = LAYOUT(TD(TD_ENCODER_BTN), // Encoder button - tap for F24, turn without hold for volume, hold while turning for hue (AND volume)
+    [_MAIN] = LAYOUT(TD(TD_ENCODER_BTN), // Encoder button - tap for F24, turn without hold for volume, hold while turning for brightness up/down (AND volume)
                      TD(TD_HUE_CHANGE),  // F13 on single tap, hue up on double-tap
                      TD(TD_BRIGHT_UP),   // F14 on single tap, brightness up on double tap
                      TD(TD_BRIGHT_DOWN), // F15 on single tap, brightness down on double tap
