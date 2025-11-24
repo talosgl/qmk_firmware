@@ -17,63 +17,50 @@
 #include QMK_KEYBOARD_H
 
 #define _MAIN 0
+// -------- Custom keycodes
+enum custom_keycodes { ENC_TOGGLE = SAFE_RANGE };
 
-// -------- on startup
-
-// void keyboard_post_init_user(void) {
-//     // Turn RGB ON at startup with low brightness to test
-//     rgblight_enable();
-//     rgblight_mode(RGBLIGHT_MODE_STATIC_LIGHT); // Static mode
-//     rgblight_sethsv(0, 255, 50);               // Red color, full saturation, low brightness (50/255)
-// }
-
-// -------- custom enum function things
+// -------- Tap dance enum
 enum {
-    TD_ENCODER_BTN = 0,
-    TD_HUE_CHANGE  = 1,
-    TD_BRIGHT_UP   = 2,
-    TD_BRIGHT_DOWN = 3,
-    TD_RGB         = 4,
+    TD_HUE_CHANGE  = 0,
+    TD_BRIGHT_UP   = 1,
+    TD_BRIGHT_DOWN = 2,
+    TD_RGB         = 3,
 };
 
 // -------- knob
 
-// Track if encoder button is being held
+// -------- Encoder state tracking
 static bool encoder_button_held = false;
+static bool encoder_was_used    = false;
 
-void dance_encoder_finished(tap_dance_state_t *state, void *user_data) {
-    if (state->pressed) {
-        // Button is being held
-        encoder_button_held = true;
+// -------- Encoder button handling
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (keycode == ENC_TOGGLE) {
+        if (record->event.pressed) {
+            encoder_button_held = true;
+        } else {
+            encoder_button_held = false;
+
+            // Only toggle RGB if encoder wasn't used for brightness
+            if (!encoder_was_used) {
+                rgblight_toggle();
+            }
+            encoder_was_used = false;
+        }
+        return false;
     }
+    return true;
 }
 
-void dance_encoder_reset(tap_dance_state_t *state, void *user_data) {
-    // Button released
-    encoder_button_held = false;
-
-    // If it was a single tap (not a hold), send F24
-    if (state->count == 1 && !state->interrupted) {
-        tap_code(KC_F24);
-    }
-}
-
+// -------- Encoder rotation handling
 bool encoder_update_user(uint8_t index, bool clockwise) {
     if (index == 0) {
         if (encoder_button_held) {
-            // While holding encoder button: change hue (It also changes volume no matter what)
-            if (clockwise) {
-                rgblight_increase_val();
-            } else {
-                rgblight_decrease_val();
-            }
+            encoder_was_used = true;
+            clockwise ? rgblight_increase_val() : rgblight_decrease_val();
         } else {
-            // Normal: volume control
-            if (clockwise) {
-                tap_code(KC_VOLU);
-            } else {
-                tap_code(KC_VOLD);
-            }
+            clockwise ? tap_code(KC_VOLU) : tap_code(KC_VOLD);
         }
     }
     return true;
@@ -117,18 +104,16 @@ void dance_rgb_finished(tap_dance_state_t *state, void *user_data) {
     }
 }
 
-// All tap dance functions
-tap_dance_action_t tap_dance_actions[] = {[TD_ENCODER_BTN] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_encoder_finished, dance_encoder_reset), [TD_HUE_CHANGE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_hue_change_finished, NULL), [TD_BRIGHT_UP] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_bright_up_finished, NULL), [TD_BRIGHT_DOWN] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_bright_down_finished, NULL), [TD_RGB] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_rgb_finished, NULL)};
+// All tap dance actions
+tap_dance_action_t tap_dance_actions[] = {[TD_HUE_CHANGE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_hue_change_finished, NULL), [TD_BRIGHT_UP] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_bright_up_finished, NULL), [TD_BRIGHT_DOWN] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_bright_down_finished, NULL), [TD_RGB] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_rgb_finished, NULL)};
 
-// -------- actually set the keymap
-const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    // button closest to USB is first
-    [_MAIN] = LAYOUT(TD(TD_ENCODER_BTN), // Encoder button - tap for F24, turn without hold for volume, hold while turning for brightness up/down (AND volume)
-                     TD(TD_HUE_CHANGE),  // F13 on single tap, hue up on double-tap
-                     TD(TD_BRIGHT_UP),   // F14 on single tap, brightness up on double tap
-                     TD(TD_BRIGHT_DOWN), // F15 on single tap, brightness down on double tap
-                     TD(TD_RGB))         // F16 on single tap, RGB toggle on double, cycle animation mode on triple, go directly to rainbow swirl animation on quad-tap
-};
+// -------- Keymap
+const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {[_MAIN] = LAYOUT(ENC_TOGGLE,         // Tap to toggle RGB, hold+turn for brightness
+                                                                               TD(TD_HUE_CHANGE),  // F13 / double-tap hue up
+                                                                               TD(TD_BRIGHT_UP),   // F14 / double-tap brightness up
+                                                                               TD(TD_BRIGHT_DOWN), // F15 / double-tap brightness down
+                                                                               TD(TD_RGB)          // F16 / double-tap RGB toggle / triple cycle / quad rainbow
+                                                                               )};
 
 /* If I want to swap to using this instead of AHK for the Alt-code keys, basic idea would be:
 enum custom_keycodes {
@@ -154,3 +139,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 */
+
+// -------- on startup
+
+// void keyboard_post_init_user(void) {
+//     // Turn RGB ON at startup with low brightness to test
+//     rgblight_enable();
+//     rgblight_mode(RGBLIGHT_MODE_STATIC_LIGHT); // Static mode
+//     rgblight_sethsv(0, 255, 50);               // Red color, full saturation, low brightness (50/255)
+// }
