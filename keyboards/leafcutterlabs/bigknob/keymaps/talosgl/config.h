@@ -1,1 +1,1 @@
-#define TAPPING_TERM 100 // Faster, but easier to accidentally double-tap
+#define TAPPING_TERM 175
